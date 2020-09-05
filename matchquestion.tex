@@ -1,0 +1,91 @@
+\documentclass{exam}
+\printanswers
+
+% to demonstrate the solutions works cross-page
+\usepackage[paperwidth=8.5in,paperheight=3in]{geometry}
+\pagestyle{empty}
+
+\usepackage{enumitem}
+\usepackage{paracol}
+\usepackage{xparse}
+\ExplSyntaxOn
+
+\NewDocumentCommand{\matchquestion}{m}
+{
+  \tl_clear:N \l__yjyao_matchquestion_options_questions_tl
+  \seq_clear:N \l__yjyao_matchquestion_options_options_seq
+  \clist_map_function:nN {#1} \yjyao_matchquestion_options_put:n
+  \seq_shuffle:N \l__yjyao_matchquestion_options_options_seq
+
+  \begin{paracol}{2}
+    \begin{itemize}[label={}]
+      \tl_use:N \l__yjyao_matchquestion_options_questions_tl
+    \end{itemize}%
+    \switchcolumn
+    \begin{enumerate}[label={\Alph*.}]
+      \seq_use:Nn \l__yjyao_matchquestion_options_options_seq {}
+    \end{enumerate}
+  \end{paracol}
+}
+
+\tl_new:N \l__yjyao_matchquestion_options_questions_tl
+\seq_new:N \l__yjyao_matchquestion_options_options_seq
+\int_new:N \l__yjyao_matchquestion_options_ctr_int
+\int_set:Nn \l__yjyao_matchquestion_options_ctr_int {0}
+
+\cs_new_protected:Nn \yjyao_matchquestion_options_put:n
+{
+  % TODO: validate with \tl_if_single_p:N {#1}
+  \yjyao_matchquestion_options_put:nn #1
+}
+
+\cs_new_protected:Nn \yjyao_matchquestion_options_put:nn
+{
+  \int_incr:N \l__yjyao_matchquestion_options_ctr_int
+  \str_set:Nx \l_yjyao_ans_label_str {matchquestionoption: {\int_use:N \l__yjyao_matchquestion_options_ctr_int}}
+
+  % TODO: use map[label->answer] to decouple data from presentation
+  \tl_if_blank:nTF {#1}
+  {% ignore empty questions. Useful for creating unused/distraction options
+  }
+  {% add non-empty questions to question-list
+    \tl_put_right:Nn \l__yjyao_matchquestion_options_questions_tl {\item \fillin[}
+    \tl_put_right:Nn \l__yjyao_matchquestion_options_questions_tl {\ref}
+    \tl_put_right:Nx \l__yjyao_matchquestion_options_questions_tl {{\str_use:N \l_yjyao_ans_label_str}}
+    \tl_put_right:Nn \l__yjyao_matchquestion_options_questions_tl {]\ #1}
+  }
+
+  \tl_set:Nn \l_yjyao_right_token_tl {\item}
+  \tl_put_right:Nn \l_yjyao_right_token_tl {\label}
+  \tl_put_right:Nx \l_yjyao_right_token_tl {{\str_use:N \l_yjyao_ans_label_str}}
+  \tl_put_right:Nn \l_yjyao_right_token_tl { #2 }
+  \seq_put_right:No \l__yjyao_matchquestion_options_options_seq {\l_yjyao_right_token_tl}
+}
+
+\sys_gset_rand_seed:n {3151}
+
+\ExplSyntaxOff
+\begin{document}
+\begin{questions}
+  \question
+  Match each of symbols on the right with the corresponding names on the left.
+
+  \matchquestion{%
+    {One}{1},
+    {Two}{2},
+    {Three}{3},
+  }
+
+  \matchquestion{%
+    {Alpha}{$\alpha$},
+    {Beta}{$\beta$},
+    {Gamma}{$\gamma$},
+    {Delta}{$\delta$},
+    {Epsilon}{$\epsilon$},
+    {Zeta}{$\zeta$},
+    % Unused options.
+    {}{$\eta$},
+    {}{$\theta$},
+  }
+\end{questions}
+\end{document}
